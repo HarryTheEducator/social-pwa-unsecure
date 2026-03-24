@@ -49,8 +49,8 @@ def retrieveUsers(username, password):
     con = sql.connect(DB_PATH)
     cur = con.cursor()
 
-    # VULNERABILITY: SQL Injection
-    cur.execute(f"SELECT * FROM users WHERE username = '{username}'")
+    # VULNERABILITY: SQL Injection --- PATCHED
+    cur.execute(f"SELECT * FROM users WHERE username = ?", (username))
     user_row = cur.fetchone()
 
     if user_row is None:
@@ -68,8 +68,8 @@ def retrieveUsers(username, password):
         except Exception:
             pass
 
-        # VULNERABILITY: SQL Injection on password field
-        cur.execute(f"SELECT * FROM users WHERE password = '{password}'")
+        # VULNERABILITY: SQL Injection on password field --- PATCHED
+        cur.execute(f"SELECT * FROM users WHERE password = ?", (password))
         result = cur.fetchone()
         con.close()
         return result is not None

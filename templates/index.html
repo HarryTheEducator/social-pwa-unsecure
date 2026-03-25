@@ -24,6 +24,7 @@
     A malicious site can submit a cross-origin form POST to this endpoint.
   -->
   <form action="/" method="POST">
+    {{ csrf_token() }}
     <div class="form-group">
       <label for="username">Username</label>
       <input

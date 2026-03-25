@@ -6,6 +6,7 @@ from flask import Flask, render_template, request, redirect
 from flask_cors import CORS
 import user_management as db
 from urllib.parse import urlparse, urljoin
+from flask_wtf.csrf import CSRFProtect
 
 # ── Auto-bootstrap the database on every startup ──────────────────────────────
 # This ensures students never see "no such table" even if setup_db.py
@@ -66,6 +67,7 @@ app = Flask(__name__)
 
 # VULNERABILITY: Wildcard CORS — allows ANY origin to make credentialed requests
 CORS(app)
+csrf = CSRFProtect(app)
 
 # VULNERABILITY: Hardcoded secret key — session cookies can be forged
 app.secret_key = "supersecretkey123"

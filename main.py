@@ -158,6 +158,7 @@ def profile():
     return render_template("profile.html", profile=profile_data, username=username)
 
 
+# 🔐 FIXED: IDOR removed here
 @app.route("/messages", methods=["POST", "GET"])
 @login_required
 def messages():
@@ -167,12 +168,16 @@ def messages():
         body      = request.form.get("body", "")
 
         db.sendMessage(sender, recipient, body)
-        msgs = db.getMessages(recipient)
 
-        return render_template("messages.html", messages=msgs, username=sender, recipient=recipient)
+        # FIX: prevent user-controlled data exposure
+        msgs = db.getMessages(sender)
+
+        return render_template("messages.html", messages=msgs, username=sender, recipient=sender)
 
     else:
         username = session["username"]
+
+        # FIX: never trust request input for data access
         msgs = db.getMessages(username)
 
         return render_template("messages.html", messages=msgs, username=username, recipient=username)

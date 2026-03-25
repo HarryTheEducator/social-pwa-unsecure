@@ -101,15 +101,17 @@ def getUserProfile(username):
     return row
 
 
-def getMessages(username):
-    """
-    Get inbox for a user.
-    VULNERABILITY: SQL Injection via f-string.
-    VULNERABILITY: No auth check — change ?user= to read anyone's inbox.
-    """
+def getMessages(current_user):
     con = sql.connect(DB_PATH)
     cur = con.cursor()
-    cur.execute("SELECT * FROM messages WHERE recipient = ? ORDER BY id DESC", (username,))
+
+    cur.execute("""
+        SELECT *
+        FROM messages
+        WHERE recipient = ?
+        ORDER BY id DESC
+    """, (current_user,))
+
     rows = cur.fetchall()
     con.close()
     return rows

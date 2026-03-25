@@ -69,7 +69,7 @@ def retrieveUsers(username, password):
             pass
 
         # VULNERABILITY: SQL Injection on password field --- PATCHED
-        cur.execute(f"SELECT * FROM users WHERE password = ?", (password))
+        cur.execute("SELECT * FROM users WHERE password = ?", (password))
         result = cur.fetchone()
         con.close()
         return result is not None
@@ -83,7 +83,7 @@ def insertPost(author, content):
     """
     con = sql.connect(DB_PATH)
     cur = con.cursor()
-    cur.execute(f"INSERT INTO posts (author, content) VALUES ('{author}', '{content}')")
+    cur.execute(f"INSERT INTO posts (author, content) VALUES (?, ?)", (author, content))
     con.commit()
     con.close()
 
@@ -108,7 +108,7 @@ def getUserProfile(username):
     """
     con = sql.connect(DB_PATH)
     cur = con.cursor()
-    cur.execute(f"SELECT id, username, dateOfBirth, bio, role FROM users WHERE username = '{username}'")
+    cur.execute("SELECT id, username, dateOfBirth, bio, role FROM users WHERE username = ?", (username,))
     row = cur.fetchone()
     con.close()
     return row
@@ -122,7 +122,7 @@ def getMessages(username):
     """
     con = sql.connect(DB_PATH)
     cur = con.cursor()
-    cur.execute(f"SELECT * FROM messages WHERE recipient = '{username}' ORDER BY id DESC")
+    cur.execute("SELECT * FROM messages WHERE recipient = ? ORDER BY id DESC", (username,))
     rows = cur.fetchall()
     con.close()
     return rows
@@ -136,7 +136,7 @@ def sendMessage(sender, recipient, body):
     """
     con = sql.connect(DB_PATH)
     cur = con.cursor()
-    cur.execute(f"INSERT INTO messages (sender, recipient, body) VALUES ('{sender}', '{recipient}', '{body}')")
+    cur.execute("INSERT INTO messages (sender, recipient, body) VALUES (?, ?, ?)", (sender, recipient, body))
     con.commit()
     con.close()
 

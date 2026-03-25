@@ -90,7 +90,7 @@ window.addEventListener('DOMContentLoaded', function () {
   if (msg && msgBox) {
     // VULNERABILITY: innerHTML allows arbitrary HTML/JS execution from URL param
     // Secure fix: use textContent instead
-    msgBox.innerHTML = msg;
+    msgBox.textContent = msg;
   }
 
   // ── Highlight active nav link ──────────────────────────────────────────────
@@ -107,19 +107,26 @@ window.addEventListener('DOMContentLoaded', function () {
 // VULNERABILITY: Listens for postMessage events from ANY origin (no origin check)
 // An iframe on a malicious page can send messages that trigger actions here
 window.addEventListener('message', function (event) {
-  // VULNERABILITY: No check on event.origin — accepts messages from any domain
+  if (event.origin !== window.location.origin) return;
+
   console.log('[App] postMessage received from:', event.origin, 'data:', event.data);
 
   if (event.data && event.data.action === 'redirect') {
-    // VULNERABILITY: Redirects to attacker-supplied URL with no validation
-    window.location.href = event.data.url;
+    try {
+      const url = new URL(event.data.url, window.location.origin);
+
+      if (url.origin === window.location.origin) {
+        window.location.href = url.href;
+      }
+    } catch (e) {
+      console.warn('[App] Invalid redirect blocked');
+    }
   }
 
   if (event.data && event.data.action === 'setMsg') {
     const msgBox = document.getElementById('js-msg-box');
     if (msgBox) {
-      // VULNERABILITY: innerHTML again — cross-origin XSS via postMessage
-      msgBox.innerHTML = event.data.content;
+      msgBox.textContent = event.data.content;
     }
   }
 });

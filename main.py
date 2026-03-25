@@ -60,7 +60,9 @@ init_db()
 
 
 app = Flask(__name__)
-CORS(app)
+
+CORS(app, resources={r"/*": {"origins": "http://localhost:5000"}})
+
 csrf = CSRFProtect(app)
 
 app.secret_key = "supersecretkey123"
@@ -68,6 +70,7 @@ app.secret_key = "supersecretkey123"
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
+    WTF_CSRF_ENABLED=True,  
 )
 
 def login_required(view):
@@ -192,4 +195,4 @@ def success():
 if __name__ == "__main__":
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(host="127.0.0.1")

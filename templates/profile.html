@@ -15,7 +15,7 @@
     script execute on anyone who visits their profile page.
   -->
   <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">
-    {{ profile[3] | safe if profile[3] else "No bio set." }}
+    {{ profile[3] if profile[3] else "No bio set."  }}
   </p>
 
   <div class="profile-stat">

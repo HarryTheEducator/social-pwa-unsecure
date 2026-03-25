@@ -50,7 +50,7 @@ def retrieveUsers(username, password):
     cur = con.cursor()
 
     # VULNERABILITY: SQL Injection --- PATCHED
-    cur.execute(f"SELECT * FROM users WHERE username = ?", (username))
+    cur.execute(f"SELECT * FROM users WHERE username = ?", (username,))
     user_row = cur.fetchone()
 
     if user_row is None:
@@ -69,7 +69,7 @@ def retrieveUsers(username, password):
             pass
 
         # VULNERABILITY: SQL Injection on password field --- PATCHED
-        cur.execute("SELECT * FROM users WHERE password = ?", (password))
+        cur.execute("SELECT * FROM users WHERE password = ?", (password,))
         result = cur.fetchone()
         con.close()
         return result is not None

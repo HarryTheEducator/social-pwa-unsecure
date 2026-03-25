@@ -27,7 +27,7 @@
         VULNERABILITY: No check that 'recipient' exists in the database.
       -->
       <form action="/messages" method="POST">
-        {{ csrf_token() }}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="sender" value="{{ username }}" />
         <div class="form-group">
           <label for="recipient">To</label>

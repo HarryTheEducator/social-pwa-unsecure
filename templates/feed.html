@@ -43,7 +43,7 @@
     -->
     <div class="compose-card">
       <form action="/feed.html" method="POST">
-        {{ csrf_token() }}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="username" value="{{ username }}" />
         <div class="form-group" style="margin-bottom:0.6rem;">
           <textarea

@@ -7,7 +7,7 @@
   <p class="subtitle">Create your free account. Takes less than a minute.</p>
 
   {% if msg %}
-  <div class="msg-box" id="js-msg-box">{{ msg | safe }}</div>
+  <div class="msg-box" id="js-msg-box">{{ msg }}</div>
   {% else %}
   <div id="js-msg-box" style="display:none;"></div>
   {% endif %}
@@ -18,7 +18,7 @@
     VULNERABILITY: No password complexity requirements enforced anywhere.
   -->
   <form action="/signup.html" method="POST">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="form-group">
       <label for="username">Username</label>
       <input

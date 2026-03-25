@@ -2,6 +2,7 @@ import sqlite3 as sql
 import time
 import random
 import os
+import bcrypt
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  user_management.py
@@ -22,57 +23,43 @@ LOG_PATH = os.path.join(BASE_DIR, "visitor_log.txt")
 
 
 def insertUser(username, password, DoB, bio=""):
-    """
-    Insert a new user.
-    VULNERABILITY: Password stored as plaintext — no bcrypt/argon2 hashing.
-    """
     con = sql.connect(DB_PATH)
     cur = con.cursor()
+
+    hashed_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+
     cur.execute(
         "INSERT INTO users (username, password, dateOfBirth, bio) VALUES (?,?,?,?)",
-        (username, password, DoB, bio),
+        (username, hashed_pw, DoB, bio),
     )
+
     con.commit()
     con.close()
 
 
 def retrieveUsers(username, password):
-    """
-    Authenticate a user.
-    VULNERABILITY 1 — SQL Injection via f-strings on both username and password.
-      Try: username = admin'--   (bypasses password check entirely)
-      Try: username = ' OR '1'='1'--
-    VULNERABILITY 2 — Timing Side-Channel:
-      sleep() only fires when username EXISTS, leaking valid usernames via response time.
-    VULNERABILITY 3 — No account lockout or rate limiting.
-    """
     con = sql.connect(DB_PATH)
     cur = con.cursor()
 
-    # VULNERABILITY: SQL Injection --- PATCHED
-    cur.execute(f"SELECT * FROM users WHERE username = ?", (username,))
-    user_row = cur.fetchone()
+    cur.execute("SELECT password FROM users WHERE username = ?", (username,))
+    row = cur.fetchone()
 
-    if user_row is None:
+    if row is None:
         con.close()
-        return False  # Fast path — no sleep here (timing leak)
+        return False
+
+    stored_hash = row[0]
+
+    # Ensure it's bytes (SQLite can return str sometimes)
+    if isinstance(stored_hash, str):
+        stored_hash = stored_hash.encode("utf-8")
+
+    if bcrypt.checkpw(password.encode("utf-8"), stored_hash):
+        con.close()
+        return True
     else:
-        # VULNERABILITY: Timing side-channel — delay ONLY when username found
-        time.sleep(random.randint(80, 90) / 1000)
-
-        try:
-            with open(LOG_PATH, "r") as f:
-                count = int(f.read().strip() or 0)
-            with open(LOG_PATH, "w") as f:
-                f.write(str(count + 1))
-        except Exception:
-            pass
-
-        # VULNERABILITY: SQL Injection on password field --- PATCHED
-        cur.execute("SELECT * FROM users WHERE password = ?", (password,))
-        result = cur.fetchone()
         con.close()
-        return result is not None
+        return False
 
 
 def insertPost(author, content):

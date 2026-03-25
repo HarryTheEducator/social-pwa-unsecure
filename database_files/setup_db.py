@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import bcrypt
 
 # Always resolve path relative to THIS file — works from any working directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -12,6 +13,10 @@ if os.path.exists(db_path):
 con = sqlite3.connect(db_path)
 cur = con.cursor()
 
+def hash_password(plain_password: str) -> str:
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(plain_password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')  # store as TEXT
 # ── Create Tables ──────────────────────────────────────────────────────────────
 
 # VULNERABILITY: No password hashing — passwords stored in plaintext
@@ -47,12 +52,12 @@ cur.execute('''
 
 # ── Seed Users ─────────────────────────────────────────────────────────────────
 users = [
-    ('admin',      'password123',  '01/01/1990', 'Site administrator. Here to keep things running.', 'admin'),
-    ('GamerGirl',  'qwerty',       '15/05/2002', 'Casual gamer | Indie titles and retro consoles.', 'user'),
-    ('TechNerd42', 'letmein',      '22/08/1998', 'Software dev by day, CTF player by night. Python fan.', 'user'),
-    ('CryptoKing', 'blockchain1',  '09/03/1995', 'Bitcoin maximalist. Not financial advice.', 'user'),
-    ('Sarah_J',    'ilovecats99',  '30/11/2001', 'Cat mum | Photography student | She/Her', 'user'),
-    ('x0_h4ck3r',  'supersecret!', '14/02/1999', "Security researcher. I find bugs so you don't have to.", 'user'),
+    ('admin',      hash_password('password123'),  '01/01/1990', 'Site administrator. Here to keep things running.', 'admin'),
+    ('GamerGirl',  hash_password('qwerty'),       '15/05/2002', 'Casual gamer | Indie titles and retro consoles.', 'user'),
+    ('TechNerd42', hash_password('letmein'),      '22/08/1998', 'Software dev by day, CTF player by night. Python fan.', 'user'),
+    ('CryptoKing', hash_password('blockchain1'),  '09/03/1995', 'Bitcoin maximalist. Not financial advice.', 'user'),
+    ('Sarah_J',    hash_password('ilovecats99'),  '30/11/2001', 'Cat mum | Photography student | She/Her', 'user'),
+    ('x0_h4ck3r',  hash_password('supersecret!'), '14/02/1999', "Security researcher. I find bugs so you don't have to.", 'user'),
 ]
 
 cur.executemany(

@@ -28,7 +28,6 @@
       -->
       <form action="/messages" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="sender" value="{{ username }}" />
         <div class="form-group">
           <label for="recipient">To</label>
           <input

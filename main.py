@@ -5,6 +5,7 @@ import subprocess
 from flask import Flask, render_template, request, redirect
 from flask_cors import CORS
 import user_management as db
+from urllib.parse import urlparse, urljoin
 
 # ── Auto-bootstrap the database on every startup ──────────────────────────────
 # This ensures students never see "no such table" even if setup_db.py
@@ -12,6 +13,23 @@ import user_management as db
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
 DB_PATH      = os.path.join(BASE_DIR, "database_files", "database.db")
 SETUP_SCRIPT = os.path.join(BASE_DIR, "database_files", "setup_db.py")
+
+def is_safe_redirect(target):
+    host_url = request.host_url
+    test_url = urljoin(host_url, target)
+
+    parsed_host = urlparse(host_url)
+    parsed_test = urlparse(test_url)
+
+    return (
+        parsed_test.scheme in ("http", "https") and
+        parsed_host.netloc == parsed_test.netloc
+    )
+
+def safe_redirect(target, fallback="/"):
+    if target and is_safe_redirect(target):
+        return redirect(target)
+    return redirect(fallback)
 
 def _tables_exist():
     """Return True if the required tables are all present."""
@@ -60,7 +78,7 @@ app.secret_key = "supersecretkey123"
 def home():
     # VULNERABILITY: Open Redirect — blindly follows 'url' query parameter
     if request.method == "GET" and request.args.get("url"):
-        return redirect(request.args.get("url"), code=302)
+        return safe_redirect(request.args.get("url"))
 
     # VULNERABILITY: Reflected XSS — 'msg' rendered with |safe in template
     if request.method == "GET":
@@ -83,7 +101,7 @@ def home():
 @app.route("/signup.html", methods=["POST", "GET"])
 def signup():
     if request.method == "GET" and request.args.get("url"):
-        return redirect(request.args.get("url"), code=302)
+        return safe_redirect(request.args.get("url"))
 
     if request.method == "POST":
         username = request.form["username"]
@@ -103,7 +121,7 @@ def signup():
 @app.route("/feed.html", methods=["POST", "GET"])
 def feed():
     if request.method == "GET" and request.args.get("url"):
-        return redirect(request.args.get("url"), code=302)
+        return safe_redirect(request.args.get("url"))
 
     if request.method == "POST":
         post_content = request.form["content"]
@@ -124,7 +142,7 @@ def profile():
     # VULNERABILITY: No authentication check — any visitor can read any profile
     # VULNERABILITY: SQL Injection via 'user' parameter in getUserProfile()
     if request.args.get("url"):
-        return redirect(request.args.get("url"), code=302)
+        return safe_redirect(request.args.get("url"))
     username = request.args.get("user", "")
     profile_data = db.getUserProfile(username)
     return render_template("profile.html", profile=profile_data, username=username)
